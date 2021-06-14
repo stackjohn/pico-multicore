@@ -8,36 +8,37 @@
 #include <vector>
 #include <iostream>
 #include <stdio.h>
+#include <cstring>
+
 
 typedef struct
 {
-    int32_t (*func)(std::string);
-    std::string data;
+    int32_t (*func)(char []);
+    char data[50];
 } queue_entry_t;
 
 queue_t call_queue;
 queue_t results_queue;
 
-queue_entry_t entry;
-
 void core1_entry() {
+
     while (1) {
         // Function pointer is passed to us via the queue_entry_t which also
         // contains the function parameter.
         // We provide an int32_t return value by simply pushing it back on the
         // return queue which also indicates the result is ready.
         printf("Inside core1....\n");
-        queue_entry_t entry;
 
+        queue_entry_t entry;
         queue_remove_blocking(&call_queue, &entry);
         std::cout << "Entry is:" << entry.data << std::endl;
-        int32_t (*func)(std::string){entry.func};
+        int32_t (*func)(char []){entry.func};
         int32_t result = func(entry.data);
         queue_add_blocking(&results_queue, &result);
     }
 }
 
-int32_t displayString(std::string received){
+int32_t displayString(char received[]){
     std::cout << "In function: " << received << std::endl;
 
     sleep_ms(3000);
@@ -50,6 +51,7 @@ int main() {
     const uint LED_PIN = 25;
     int32_t res;
     bool first = false;
+    queue_entry_t entry;
 
     stdio_init_all();
     gpio_init(LED_PIN);
@@ -69,7 +71,8 @@ int main() {
             rcv = "A long string to test with..............";
             first=true;
             entry.func = &displayString;
-            entry.data = rcv;
+            strncpy(entry.data, rcv.c_str(), sizeof(entry.data));
+            entry.data[sizeof(entry.data) - 1] = '\0';
             queue_add_blocking(&call_queue, &entry);
         }
 
