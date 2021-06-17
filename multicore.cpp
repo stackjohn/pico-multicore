@@ -32,13 +32,13 @@ void core1_entry() {
         queue_entry_t entry;
         queue_remove_blocking(&call_queue, &entry);
         std::cout << "Entry is:" << entry.data << std::endl;
-        int32_t (*func)(char []){entry.func};
+        int32_t (*func)(char [50]){entry.func};
         int32_t result = func(entry.data);
         queue_add_blocking(&results_queue, &result);
     }
 }
 
-int32_t displayString(char received[]){
+int32_t displayString(char received[50]){
     std::cout << "In function: " << received << std::endl;
 
     sleep_ms(3000);
